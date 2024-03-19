@@ -1,0 +1,6 @@
+# Pour installer GLFW
+sudo apt-get install libglfw3
+sudo apt-get install libglfw3-dev
+
+# Pour installer GLEW
+sudo apt-get install libglew-dev
