@@ -27,13 +27,17 @@ Mesh::Mesh(const std::vector<float> &vertices,
         combinedData.push_back(vertices[i * 3 + 2]);
 
         // Ajouter les données de normale
-        combinedData.push_back(normals[i * 3]);
-        combinedData.push_back(normals[i * 3 + 1]);
-        combinedData.push_back(normals[i * 3 + 2]);
+        if (normals.size() > 0) {
+            combinedData.push_back(normals[i * 3]);
+            combinedData.push_back(normals[i * 3 + 1]);
+            combinedData.push_back(normals[i * 3 + 2]);
+        }
 
         // Ajouter les données de texture
-        combinedData.push_back(textureCoords[i * 2]);
-        combinedData.push_back(textureCoords[i * 2 + 1]);
+        if (textureCoords.size() > 0) {
+            combinedData.push_back(textureCoords[i * 2]);
+            combinedData.push_back(textureCoords[i * 2 + 1]);
+        }
     }
 
     vertexCount = static_cast<int>(indices.size());
