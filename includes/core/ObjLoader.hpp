@@ -16,10 +16,6 @@
 #include "define.hpp"
 #include "Mesh.hpp"
 
-struct Vertex {
-    float x, y, z;
-};
-
 struct Normal {
     float nx, ny, nz;
 };
@@ -50,6 +46,9 @@ private:
     void parseNormal(istringstream& iss);
     void parseTextureCoord(istringstream& iss);
     void parseFace(istringstream& iss);
+    void calculateNormalsForFace(const vector<int> &vertexIndices, vector<float> &flatNormals);
+    Vec3 calculateCenter();
+    void adjustVerticesToCenter(const Vec3 &center);
 };
 
 #endif

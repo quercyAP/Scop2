@@ -46,6 +46,9 @@ public:
 
     // Génère une matrice de vue
     static Mat4 lookAt(const Vec3& eye, const Vec3& center, const Vec3& up);
+
+    // inversion de la matrice
+    static Mat4 inverse();
 };
 
 #endif

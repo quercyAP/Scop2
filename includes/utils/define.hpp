@@ -21,6 +21,16 @@
 #include <sstream>
 #include <cmath>
 #include <cstring>
+#include "Vec3.hpp"
+#include "Mat4.hpp"
+
+struct Vertex {
+    float x, y, z;
+
+    Vec3 toVec3() const {
+        return Vec3(x, y, z);
+    }
+};
 
 using namespace std;
 

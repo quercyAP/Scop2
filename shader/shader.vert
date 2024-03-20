@@ -11,7 +11,7 @@ uniform mat4 view; // Matrice de vue pour transformer les coordonnées du monde 
 uniform mat4 projection; // Matrice de projection pour transformer les coordonnées de vue en coordonnées de l'espace de clip
 
 void main() {
-    gl_Position = projection * view * vec4(aPos, 1.0);
+    gl_Position = projection * view * model *vec4(aPos, 1.0);
     Normal = aNormal; // Ici, on passe simplement la normale sans transformation
     TexCoords = aTexCoords; // Passer simplement les coordonnées de texture
 }

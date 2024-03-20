@@ -17,42 +17,35 @@ Mesh::Mesh(const std::vector<float> &vertices,
            const std::vector<float> &textureCoords,
            const std::vector<unsigned int> &indices)
 {
-    // Calculez la taille correcte pour le buffer en fonction des vertices, normales et coordonnées de texture
     std::vector<float> combinedData;
-    for (size_t i = 0; i < vertices.size() / 3; ++i)
+    bool hasNormals = !normals.empty();
+    bool hasTextureCoords = !textureCoords.empty();
+
+
+    for (size_t i = 0; i < vertices.size() / 3; i++)
     {
         // Ajouter les données de vertex
-        combinedData.push_back(vertices[i * 3]);
-        combinedData.push_back(vertices[i * 3 + 1]);
-        combinedData.push_back(vertices[i * 3 + 2]);
+        combinedData.insert(combinedData.end(), {vertices[i * 3], vertices[i * 3 + 1], vertices[i * 3 + 2]});
 
-        // Ajouter les données de normale
-        if (normals.size() > 0) {
-            combinedData.push_back(normals[i * 3]);
-            combinedData.push_back(normals[i * 3 + 1]);
-            combinedData.push_back(normals[i * 3 + 2]);
+        // Conditionnellement ajouter les données de normale
+        if (hasNormals)
+        {
+            combinedData.insert(combinedData.end(), {normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]});
         }
 
-        // Ajouter les données de texture
-        if (textureCoords.size() > 0) {
-            combinedData.push_back(textureCoords[i * 2]);
-            combinedData.push_back(textureCoords[i * 2 + 1]);
+        // Conditionnellement ajouter les données de texture
+        if (hasTextureCoords)
+        {
+            combinedData.insert(combinedData.end(), {textureCoords[i * 2], textureCoords[i * 2 + 1]});
         }
     }
 
     vertexCount = static_cast<int>(indices.size());
-    cout << "Vertex count: " << vertexCount << endl;
-    setupMesh(combinedData, indices);
+    setupMesh(combinedData, indices, hasNormals, hasTextureCoords);
 }
 
-Mesh::~Mesh()
-{
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-}
-
-void Mesh::setupMesh(const std::vector<float> &combinedData, const std::vector<unsigned int> &indices)
+void Mesh::setupMesh(const std::vector<float> &combinedData, const std::vector<unsigned int> &indices,
+                     bool hasNormals, bool hasTextureCoords)
 {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -62,26 +55,45 @@ void Mesh::setupMesh(const std::vector<float> &combinedData, const std::vector<u
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, combinedData.size() * sizeof(float), combinedData.data(), GL_STATIC_DRAW);
 
-    // La taille d'un vertex est maintenant la somme des tailles de position, normale et texture
-    size_t stride = (3 + 3 + 2) * sizeof(float);
+    // Le stride reflète maintenant la présence ou l'absence des données de normale et de texture
+    size_t stride = 3 * sizeof(float); // Composants de position
+    if (hasNormals)
+        stride += 3 * sizeof(float); // Composants de normale
+    if (hasTextureCoords)
+        stride += 2 * sizeof(float); // Composants de texture
+
+    // Configuration des attributs de vertex
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void *)0);
     glEnableVertexAttribArray(0);
 
-    // Les normales commencent après les positions
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    if (hasNormals)
+    {
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void *)(3 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+    }
 
-    // Les coordonnées de texture commencent après les positions et les normales
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void *)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+    if (hasTextureCoords)
+    {
+        size_t textureOffset = hasNormals ? 6 * sizeof(float) : 3 * sizeof(float);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void *)textureOffset);
+        glEnableVertexAttribArray(2);
+    }
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
-    
+
     glBindVertexArray(0); // Unbind VAO
 }
 
-void Mesh::draw() const {
+Mesh::~Mesh()
+{
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+}
+
+void Mesh::draw() const
+{
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);

@@ -112,6 +112,12 @@ Mat4 Mat4::perspective(float fov, float aspect, float near, float far)
     return result;
 }
 
+Mat4 Mat4::inverse()
+{
+    Mat4 result;
+    return result;
+}
+
 Mat4 Mat4::lookAt(const Vec3 &eye, const Vec3 &center, const Vec3 &up)
 {
     Vec3 f = (center - eye).normalize(); // Direction de vue

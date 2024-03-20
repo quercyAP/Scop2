@@ -1,8 +1,9 @@
 SRCS			= core/Application.cpp \
 				 core/ObjLoader.cpp \
-				 core/Mesh.cpp \
 				 core/ShaderProgram.cpp \
 				 core/Camera.cpp \
+				 core/Mesh.cpp \
+				 core/Transform.cpp \
 				 main.cpp \
 				 lib/Vec3.cpp \
 				 lib/Mat4.cpp \

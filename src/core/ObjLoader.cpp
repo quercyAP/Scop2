@@ -112,6 +112,22 @@ void ObjLoader::parseFace(istringstream &iss)
     faces.push_back(face);
 }
 
+Vec3 ObjLoader::calculateCenter() {
+    Vec3 sum(0.0f, 0.0f, 0.0f);
+    for (auto& vertex : vertices) {
+        sum += Vec3(vertex.x, vertex.y, vertex.z);
+    }
+    return sum / vertices.size();
+}
+
+void ObjLoader::adjustVerticesToCenter(const Vec3& center) {
+    for (auto& vertex : vertices) {
+        vertex.x -= center.x;
+        vertex.y -= center.y;
+        vertex.z -= center.z;
+    }
+}
+
 Mesh ObjLoader::createMesh()
 {
     vector<float> flatVertices;
@@ -119,8 +135,13 @@ Mesh ObjLoader::createMesh()
     vector<float> flatTextures;
     vector<unsigned int> indices;
 
+    Vec3 center = calculateCenter();
+    adjustVerticesToCenter(center);
+
     for (const auto &face : faces)
     {
+        if (normals.empty())
+            calculateNormalsForFace(face.vertexIndices, flatNormals);
         if (face.vertexIndices.size() == 3)
         { // Gestion des triangles
             for (int i = 0; i < 3; ++i)
@@ -171,5 +192,26 @@ void ObjLoader::processVertex(const Face &face, int index, vector<float> &flatVe
         flatNormals.push_back(normals[normalIndex].nx);
         flatNormals.push_back(normals[normalIndex].ny);
         flatNormals.push_back(normals[normalIndex].nz);
+    }
+}
+
+void ObjLoader::calculateNormalsForFace(const vector<int> &vertexIndices, vector<float> &flatNormals) {
+    if (vertexIndices.size() < 3) return; // Besoin d'au moins 3 points pour former une face
+
+    // Calculer les deux premiers vecteurs de l'arête de la face
+    Vec3 v0 = vertices[vertexIndices[0] - 1].toVec3();
+    Vec3 v1 = vertices[vertexIndices[1] - 1].toVec3();
+    Vec3 v2 = vertices[vertexIndices[2] - 1].toVec3();
+    Vec3 edge1 = v1 - v0;
+    Vec3 edge2 = v2 - v0;
+
+    // Calculer la normale de la face (normalisée)
+    Vec3 normal = Vec3::cross(edge1, edge2).normalize();
+
+    // Appliquer cette normale à tous les sommets de la face
+    for (size_t i = 0; i < vertexIndices.size(); ++i) {
+        flatNormals.push_back(normal.x);
+        flatNormals.push_back(normal.y);
+        flatNormals.push_back(normal.z);
     }
 }

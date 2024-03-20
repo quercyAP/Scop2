@@ -13,18 +13,19 @@
 #include "Application.hpp"
 
 Application::Application() : mesh(nullptr), shader(nullptr), window(nullptr),
-                             deltaTime(0.0f), camera(Vec3(0.0f, 0.0f, -3.0f), Vec3(0.0f, 1.0f, 0.0f), 45.0f, 0.0f)
+                             deltaTime(0.0f), camera(Vec3(5.0f, 0.0f, 5.0f), Vec3(0.0f, 1.0f, 0.0f), 45.0f, 0.0f),
+                             isRotationMode(false)
 {
     initWindow();
     initOpenGL();
 
-    cout << "OpenGL version: " << glGetString(GL_VERSION) << endl;
-    if (objLoader.loadObj("assets/ressources/42.obj") == false)
+    if (objLoader.loadObj("assets/sci-fi.obj") == false)
     {
         cerr << "Failed to load OBJ file" << endl;
         exit(-1);
     }
     mesh = new Mesh(objLoader.createMesh());
+    mesh->transform.calculateCenter(objLoader.vertices);
     shader = new ShaderProgram("shader/shader.vert", "shader/shader.frag");
 }
 
@@ -46,7 +47,6 @@ void Application::run()
         lastFrameTime = currentFrameTime;
 
         processInput();
-        update(deltaTime);
         render();
 
         glfwSwapBuffers(window);
@@ -60,7 +60,6 @@ void Application::initWindow()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
 
     window = glfwCreateWindow(800, 600, "Scop", nullptr, nullptr);
     if (window == nullptr)
@@ -105,11 +104,45 @@ void Application::processInput()
         camera.processKeyboardMovement(false, false, false, true, deltaTime);
 
     // Ajoutez ici la gestion des entrées pour la rotation de la caméra basée sur les mouvements de la souris si nécessaire
-}
 
-void Application::update(float deltaTime)
-{
-    // Mettez à jour la logique de l'application (par exemple, déplacement de la caméra)
+    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+    {
+        isRotationMode = !isRotationMode; // Toggle rotation mode
+        usleep(100000);
+    }
+
+    if (isRotationMode)
+    {
+        // Gestion de la rotation du Mesh actuellement sélectionné
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+            mesh->transform.rotation.x += 1.0f; // Pivoter vers le haut
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+            mesh->transform.rotation.x -= 1.0f; // Pivoter vers le bas
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+            mesh->transform.rotation.y += 1.0f; // Pivoter vers la gauche
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+            mesh->transform.rotation.y -= 1.0f; // Pivoter vers la droite
+        if (glfwGetKey(window, GLFW_KEY_PAGE_UP) == GLFW_PRESS)
+            mesh->transform.rotation.z -= 1.0f;
+        if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)   
+            mesh->transform.rotation.z += 1.0f;
+    }
+    else
+    {
+        // Gestion des mouvements du Mesh actuellement sélectionné
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+            mesh->transform.center += Vec3(0.1f, 0.0f, 0.0f); // Droite
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+            mesh->transform.center += Vec3(-0.1f, 0.0f, 0.0f); // Gauche
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+            mesh->transform.center += Vec3(0.0f, 0.0f, -0.1f); // Avancer
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+            mesh->transform.center += Vec3(0.0f, 0.0f, 0.1f); // Reculer
+        if (glfwGetKey(window, GLFW_KEY_PAGE_UP) == GLFW_PRESS)
+            mesh->transform.center += Vec3(0.0f, -0.1f, 0.0f); // Monter
+        if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
+            mesh->transform.center += Vec3(0.0f, 0.1f, 0.0f); // Descendre
+    }
 }
 
 void Application::render()
@@ -117,9 +150,11 @@ void Application::render()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    Mat4 modelMatrix = mesh->transform.getTransformationMatrix();
+
     shader->use();
     // Définir les uniformes nécessaires pour le shader, comme les matrices de transformation
-    // shader->setUniform("model", modelMatrix);
+    shader->setUniform("model", modelMatrix);
     shader->setUniform("view", camera.getViewMatrix());
     shader->setUniform("projection", camera.getProjectionMatrix(800.0f / 600.0f));
 

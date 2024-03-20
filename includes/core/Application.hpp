@@ -35,16 +35,15 @@ private:
     bool firstMouse = true;
     float lastX = 800 / 2.0f;
     float lastY = 600 / 2.0f;
+    bool isRotationMode;
 
     static void framebufferSizeCallback(GLFWwindow* window, int width, int height);
     void processInput();
-    void update(float deltaTime);
     void render();
 
     void initWindow();
     void initOpenGL();
 
-    void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 };
 
 #endif 

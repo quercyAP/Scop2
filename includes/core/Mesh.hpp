@@ -14,10 +14,12 @@
 #define MESH_HPP
 
 #include "define.hpp"
+#include "Transform.hpp"
 
 class Mesh {
 public:
-    // Constructor modifié pour accepter les vecteurs float et indices directement
+    Transform transform;
+
     Mesh(const vector<float>& vertices,
          const vector<float>& normals,
          const vector<float>& textureCoords,
@@ -28,9 +30,10 @@ public:
 
 private:
     GLuint VAO, VBO, EBO;
-    int vertexCount; // Stocke le nombre de vertex à dessiner
+    int vertexCount;
 
-    void setupMesh(const std::vector<float> &combinedData, const std::vector<unsigned int> &indices);
+    void setupMesh(const std::vector<float> &combinedData, const std::vector<unsigned int> &indices, bool hasNormals, bool hasTextureCoords);
+
 };
 
 #endif 
