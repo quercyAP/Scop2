@@ -52,6 +52,9 @@ void ShaderProgram::setUniform(const std::string& name, const Mat4& mat) const {
     glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, mat.m);
 }
 
+void ShaderProgram::setUniform(const std::string& name, const Vec3& value) const {
+    glUniform3f(glGetUniformLocation(ID, name.c_str()), value.x, value.y, value.z);
+}
 
 string ShaderProgram::readShaderCodeFromFile(const char* shaderPath) {
     ifstream shaderFile(shaderPath);

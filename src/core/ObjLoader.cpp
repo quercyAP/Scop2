@@ -44,9 +44,28 @@ bool ObjLoader::loadObj(const string &path)
         {
             parseFace(iss);
         }
+        else if (prefix == "usemtl")
+        {
+            parseUseMtl(iss);
+        }
+        else if (prefix == "mtllib")
+        {
+            string mtlFilePath;
+            iss >> mtlFilePath;
+            if (!materialManager.loadMaterials("assets/" + mtlFilePath))
+            {
+                cerr << "Failed to load MTL file: " << mtlFilePath << endl;
+                return false;
+            }
+        }
     }
 
     return true;
+}
+
+void ObjLoader::parseUseMtl(istringstream &iss)
+{
+    iss >> currentMaterialName; // Supposons que `currentMaterialName` stocke le matériau actuel
 }
 
 void ObjLoader::parseVertex(istringstream &iss)
@@ -112,16 +131,20 @@ void ObjLoader::parseFace(istringstream &iss)
     faces.push_back(face);
 }
 
-Vec3 ObjLoader::calculateCenter() {
+Vec3 ObjLoader::calculateCenter()
+{
     Vec3 sum(0.0f, 0.0f, 0.0f);
-    for (auto& vertex : vertices) {
+    for (auto &vertex : vertices)
+    {
         sum += Vec3(vertex.x, vertex.y, vertex.z);
     }
     return sum / vertices.size();
 }
 
-void ObjLoader::adjustVerticesToCenter(const Vec3& center) {
-    for (auto& vertex : vertices) {
+void ObjLoader::adjustVerticesToCenter(const Vec3 &center)
+{
+    for (auto &vertex : vertices)
+    {
         vertex.x -= center.x;
         vertex.y -= center.y;
         vertex.z -= center.z;
@@ -138,15 +161,16 @@ Mesh ObjLoader::createMesh()
     Vec3 center = calculateCenter();
     adjustVerticesToCenter(center);
 
+    vector<Vec3> vertexNormals;
+    initializeVertexNormals(vertexNormals);
+
     for (const auto &face : faces)
     {
-        if (normals.empty())
-            calculateNormalsForFace(face.vertexIndices, flatNormals);
         if (face.vertexIndices.size() == 3)
         { // Gestion des triangles
             for (int i = 0; i < 3; ++i)
             {
-                processVertex(face, i, flatVertices, flatNormals, flatTextures);
+                processVertex(face, i, flatVertices, flatNormals, flatTextures, vertexNormals);
             }
         }
         else if (face.vertexIndices.size() == 4)
@@ -154,64 +178,70 @@ Mesh ObjLoader::createMesh()
             // Diviser le quad en deux triangles (0, 1, 2) et (0, 2, 3)
             for (int i = 0; i < 3; ++i)
             { // Premier triangle
-                processVertex(face, i, flatVertices, flatNormals, flatTextures);
+                processVertex(face, i, flatVertices, flatNormals, flatTextures, vertexNormals);
             }
             for (int i : {0, 2, 3})
             { // Deuxième triangle
-                processVertex(face, i, flatVertices, flatNormals, flatTextures);
+                processVertex(face, i, flatVertices, flatNormals, flatTextures, vertexNormals);
             }
         }
         // Extension possible pour des polygones à plus de 4 sommets
     }
 
-    // Création du Mesh avec les données aplaties
     for (size_t i = 0; i < flatVertices.size() / 3; ++i)
     {
         indices.push_back(i);
     }
-    return Mesh(flatVertices, flatNormals, flatTextures, indices);
+    return Mesh(flatVertices, flatNormals, flatTextures, indices, materialManager.getMaterial(currentMaterialName));
 }
 
-void ObjLoader::processVertex(const Face &face, int index, vector<float> &flatVertices, vector<float> &flatNormals, vector<float> &flatTextures)
+void ObjLoader::processVertex(const Face &face, int index, vector<float> &flatVertices, vector<float> &flatNormals, vector<float> &flatTextures, const vector<Vec3> &vertexNormals)
 {
     int vertexIndex = face.vertexIndices[index] - 1;
     flatVertices.push_back(vertices[vertexIndex].x);
     flatVertices.push_back(vertices[vertexIndex].y);
     flatVertices.push_back(vertices[vertexIndex].z);
 
+    flatNormals.push_back(vertexNormals[vertexIndex].x);
+    flatNormals.push_back(vertexNormals[vertexIndex].y);
+    flatNormals.push_back(vertexNormals[vertexIndex].z);
+
     if (!face.textureIndices.empty())
     {
-        int texIndex = face.textureIndices[index] - 1; // Les coordonnées de texture sont optionnelles
+        int texIndex = face.textureIndices[index] - 1;
         flatTextures.push_back(textureCoords[texIndex].u);
         flatTextures.push_back(textureCoords[texIndex].v);
     }
+}
 
-    if (!face.normalIndices.empty())
+void ObjLoader::initializeVertexNormals(vector<Vec3> &vertexNormals)
+{
+    vertexNormals.resize(vertices.size(), Vec3(0, 0, 0));
+    for (const auto &face : faces)
     {
-        int normalIndex = face.normalIndices[index] - 1; // Les normales sont optionnelles
-        flatNormals.push_back(normals[normalIndex].nx);
-        flatNormals.push_back(normals[normalIndex].ny);
-        flatNormals.push_back(normals[normalIndex].nz);
+        Vec3 normal = calculateFaceNormal(face.vertexIndices);
+        for (int vertexIndex : face.vertexIndices)
+        {
+            vertexNormals[vertexIndex - 1] += normal;
+        }
+    }
+    for (Vec3 &normal : vertexNormals)
+    {
+        normal.normalize();
     }
 }
 
-void ObjLoader::calculateNormalsForFace(const vector<int> &vertexIndices, vector<float> &flatNormals) {
-    if (vertexIndices.size() < 3) return; // Besoin d'au moins 3 points pour former une face
+Vec3 ObjLoader::calculateFaceNormal(const vector<int> &vertexIndices)
+{
+    if (vertexIndices.size() < 3)
+        return Vec3(0, 0, 0);
 
-    // Calculer les deux premiers vecteurs de l'arête de la face
     Vec3 v0 = vertices[vertexIndices[0] - 1].toVec3();
     Vec3 v1 = vertices[vertexIndices[1] - 1].toVec3();
     Vec3 v2 = vertices[vertexIndices[2] - 1].toVec3();
+
     Vec3 edge1 = v1 - v0;
     Vec3 edge2 = v2 - v0;
 
-    // Calculer la normale de la face (normalisée)
-    Vec3 normal = Vec3::cross(edge1, edge2).normalize();
-
-    // Appliquer cette normale à tous les sommets de la face
-    for (size_t i = 0; i < vertexIndices.size(); ++i) {
-        flatNormals.push_back(normal.x);
-        flatNormals.push_back(normal.y);
-        flatNormals.push_back(normal.z);
-    }
+    return Vec3::cross(edge1, edge2).normalize();
 }

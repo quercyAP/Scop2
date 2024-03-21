@@ -15,12 +15,14 @@
 Mesh::Mesh(const std::vector<float> &vertices,
            const std::vector<float> &normals,
            const std::vector<float> &textureCoords,
-           const std::vector<unsigned int> &indices)
+           const std::vector<unsigned int> &indices,
+           const Material *material) 
 {
     std::vector<float> combinedData;
     bool hasNormals = !normals.empty();
     bool hasTextureCoords = !textureCoords.empty();
-
+    material = material;
+    texture = new Texture("assets/kitten.bmp");
 
     for (size_t i = 0; i < vertices.size() / 3; i++)
     {
@@ -55,7 +57,7 @@ void Mesh::setupMesh(const std::vector<float> &combinedData, const std::vector<u
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, combinedData.size() * sizeof(float), combinedData.data(), GL_STATIC_DRAW);
 
-    // Le stride reflète maintenant la présence ou l'absence des données de normale et de texture
+    // Le stride reflète la présence ou l'absence des données de normale et de texture
     size_t stride = 3 * sizeof(float); // Composants de position
     if (hasNormals)
         stride += 3 * sizeof(float); // Composants de normale
@@ -67,13 +69,13 @@ void Mesh::setupMesh(const std::vector<float> &combinedData, const std::vector<u
     glEnableVertexAttribArray(0);
 
     if (hasNormals)
-    {
+    {// Configuration des attributs de normale
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void *)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
     }
 
     if (hasTextureCoords)
-    {
+    { // Configuration des attributs de texture
         size_t textureOffset = hasNormals ? 6 * sizeof(float) : 3 * sizeof(float);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void *)textureOffset);
         glEnableVertexAttribArray(2);
@@ -90,6 +92,8 @@ Mesh::~Mesh()
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
+    delete texture;
+    delete material;
 }
 
 void Mesh::draw() const
@@ -97,4 +101,7 @@ void Mesh::draw() const
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
+
+    if (texture->hasTexture)
+        texture->unbind();
 }

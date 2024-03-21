@@ -15,15 +15,19 @@
 
 #include "define.hpp"
 #include "Transform.hpp"
+#include "Texture.hpp"
 
 class Mesh {
 public:
     Transform transform;
+    Material *material;
+    Texture *texture;
 
     Mesh(const vector<float>& vertices,
          const vector<float>& normals,
          const vector<float>& textureCoords,
-         const vector<unsigned int>& indices);
+         const vector<unsigned int>& indices,
+         const Material* material);
     ~Mesh();
 
     void draw() const;

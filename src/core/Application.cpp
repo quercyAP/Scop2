@@ -19,7 +19,7 @@ Application::Application() : mesh(nullptr), shader(nullptr), window(nullptr),
     initWindow();
     initOpenGL();
 
-    if (objLoader.loadObj("assets/sci-fi.obj") == false)
+    if (objLoader.loadObj("assets/42.obj") == false)
     {
         cerr << "Failed to load OBJ file" << endl;
         exit(-1);
@@ -57,8 +57,8 @@ void Application::run()
 void Application::initWindow()
 {
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     window = glfwCreateWindow(800, 600, "Scop", nullptr, nullptr);
@@ -157,6 +157,19 @@ void Application::render()
     shader->setUniform("model", modelMatrix);
     shader->setUniform("view", camera.getViewMatrix());
     shader->setUniform("projection", camera.getProjectionMatrix(800.0f / 600.0f));
+
+    if (mesh->texture->hasTexture)
+    {
+        mesh->texture->bind(0);
+        shader->setUniform("material.hasTexture", true);
+    }
+    if (mesh->material != nullptr)
+    {
+        shader->setUniform("material.ambient", mesh->material->ambient);
+        shader->setUniform("material.diffuse", mesh->material->diffuse);
+        shader->setUniform("material.specular", mesh->material->specular);
+        shader->setUniform("material.shininess", mesh->material->shininess);
+    }
 
     // Dessiner vos objets Mesh ici
     mesh->draw();

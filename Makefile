@@ -1,12 +1,14 @@
-SRCS			= core/Application.cpp \
+SRCS			= lib/Vec3.cpp \
+				 lib/Mat4.cpp \
+				 main.cpp \
+				 core/Texture.cpp \
+				 core/MaterialManager.cpp \
+				 core/Transform.cpp \
+				 core/Camera.cpp \
+				 core/Application.cpp \
+				 core/Mesh.cpp \
 				 core/ObjLoader.cpp \
 				 core/ShaderProgram.cpp \
-				 core/Camera.cpp \
-				 core/Mesh.cpp \
-				 core/Transform.cpp \
-				 main.cpp \
-				 lib/Vec3.cpp \
-				 lib/Mat4.cpp \
 				
 SRC_DIR			=	./src/
 SOURCES			=	$(addprefix $(SRC_DIR), $(SRCS))
@@ -24,9 +26,9 @@ CC				=	c++
 # CCFLAG			=	-Wall -Wextra -Werror -Wno-unknown-pragmas
 
 HDR_FLAGS		= -I includes \
+				 -I includes/lib \
 				 -I includes/utils \
 				 -I includes/core \
-				 -I includes/lib \
 				
 LIB				= -lglfw -lGLEW -lGL		
 LIB_DIR			=	

@@ -17,6 +17,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <unordered_map>
 #include <fstream>
 #include <sstream>
 #include <cmath>
@@ -31,6 +32,14 @@ struct Vertex {
         return Vec3(x, y, z);
     }
 };
+
+struct Material {
+    Vec3 ambient;
+    Vec3 diffuse;
+    Vec3 specular;
+    float shininess;
+};
+
 
 using namespace std;
 

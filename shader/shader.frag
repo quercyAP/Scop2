@@ -1,18 +1,31 @@
 #version 330 core
 out vec4 FragColor;
 
-in vec3 Normal; // Normale reçue du vertex shader
-in vec2 TexCoords; // Coordonnées de texture reçues du vertex shader
+in vec3 Normal;
+in vec3 FragPos;
+in vec2 TexCoords;
 
-// Texture sampler pour la texture du modèle
-uniform sampler2D texture_diffuse;
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+    bool hasTexture;
+};
 
-void main() {
-    // Exemple simple de coloration utilisant la texture
-    // FragColor = texture(texture_diffuse, TexCoords);
+uniform Material material;
+uniform vec3 viewPos;
+
+void main()
+{
+    vec3 ambient = material.ambient;
+    vec3 diffuse = material.diffuse * max(dot(normalize(Normal), normalize(-FragPos)), 0.0);
+    vec3 specular = material.specular * pow(max(dot(viewPos, reflect(-normalize(FragPos), normalize(Normal))), 0.0), material.shininess);
     
-    // Si vous voulez voir les normales comme couleur (pour débogage)
-    float intensity = max(dot(normalize(Normal), normalize(vec3(0.0, 0.0, 1.0))), 0.0); 
-    vec3 color = mix(vec3(0.2, 0.2, 0.2), vec3(1.0, 1.0, 1.0), intensity); // Nuances de gris basées sur l'intensité
-    FragColor = vec4(color, 1.0);
+    vec3 result = ambient + diffuse + specular;
+    if(material.hasTexture)
+    {
+        result *= texture(0, TexCoords).rgb;
+    }
+    FragColor = vec4(result, 1.0);
 }

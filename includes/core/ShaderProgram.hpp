@@ -27,7 +27,8 @@ public:
     void setUniform(const string& name, float value) const;
     void setUniform(const string& name, int value) const;
     void setUniform(const string& name, bool value) const;
-    void setUniform(const std::string& name, const Mat4& mat) const;
+    void setUniform(const string& name, const Mat4& mat) const;
+    void setUniform(const string& name, const Vec3& vec) const;
 
 private:
     string readShaderCodeFromFile(const char* shaderPath);
