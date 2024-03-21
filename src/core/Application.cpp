@@ -19,7 +19,7 @@ Application::Application() : mesh(nullptr), shader(nullptr), window(nullptr),
     initWindow();
     initOpenGL();
 
-    if (objLoader.loadObj("assets/42.obj") == false)
+    if (objLoader.loadObj("assets/teapot.obj") == false)
     {
         cerr << "Failed to load OBJ file" << endl;
         exit(-1);
@@ -124,7 +124,7 @@ void Application::processInput()
             mesh->transform.rotation.y -= 1.0f; // Pivoter vers la droite
         if (glfwGetKey(window, GLFW_KEY_PAGE_UP) == GLFW_PRESS)
             mesh->transform.rotation.z -= 1.0f;
-        if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)   
+        if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
             mesh->transform.rotation.z += 1.0f;
     }
     else
@@ -147,22 +147,35 @@ void Application::processInput()
 
 void Application::render()
 {
+    // a sortir d'ici car instancié à chaque frame
+    Vec3 lightPos = Vec3(1.2f, 1.0f, 2.0f);
+    Vec3 lightColor = Vec3(0.5f, 0.5f, 0.5f);
+    Vec3 defaultAmbient = Vec3(0.1f, 0.1f, 0.1f);
+    Vec3 defaultDiffuse = Vec3(0.7f, 0.7f, 0.7f);
+    Vec3 defaultSpecular = Vec3(1.0f, 1.0f, 1.0f);
+    float defaultShininess = 32.0f;
+
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     Mat4 modelMatrix = mesh->transform.getTransformationMatrix();
 
     shader->use();
-    // Définir les uniformes nécessaires pour le shader, comme les matrices de transformation
     shader->setUniform("model", modelMatrix);
     shader->setUniform("view", camera.getViewMatrix());
     shader->setUniform("projection", camera.getProjectionMatrix(800.0f / 600.0f));
+    shader->setUniform("light.position", lightPos);
+    shader->setUniform("light.color", lightColor);
 
-    if (mesh->texture->hasTexture)
+    bool hasTexture = mesh->texture && mesh->texture->hasTexture;
+    shader->setUniform("material.hasTexture", hasTexture);
+
+    if (hasTexture)
     {
         mesh->texture->bind(0);
-        shader->setUniform("material.hasTexture", true);
+        shader->setUniform("texture_diffuse", 0);
     }
+
     if (mesh->material != nullptr)
     {
         shader->setUniform("material.ambient", mesh->material->ambient);
@@ -170,9 +183,14 @@ void Application::render()
         shader->setUniform("material.specular", mesh->material->specular);
         shader->setUniform("material.shininess", mesh->material->shininess);
     }
+    else
+    {
+        shader->setUniform("material.ambient", defaultAmbient);
+        shader->setUniform("material.diffuse", defaultDiffuse);
+        shader->setUniform("material.specular", defaultSpecular);
+        shader->setUniform("material.shininess", defaultShininess);
+    }
 
     // Dessiner vos objets Mesh ici
     mesh->draw();
-
-    // D'autres appels de dessin peuvent suivre...
 }

@@ -24,9 +24,9 @@ public:
     
     void bind(unsigned int slot = 0) const;
     void unbind() const;
+    unsigned int textureID;
 
 private:
-    unsigned int textureID;
 };
 
 #endif

@@ -20,7 +20,7 @@
 class Mesh {
 public:
     Transform transform;
-    Material *material;
+    const Material *material;
     Texture *texture;
 
     Mesh(const vector<float>& vertices,

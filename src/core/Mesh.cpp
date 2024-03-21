@@ -21,7 +21,7 @@ Mesh::Mesh(const std::vector<float> &vertices,
     std::vector<float> combinedData;
     bool hasNormals = !normals.empty();
     bool hasTextureCoords = !textureCoords.empty();
-    material = material;
+    this->material = material;
     texture = new Texture("assets/kitten.bmp");
 
     for (size_t i = 0; i < vertices.size() / 3; i++)
@@ -93,7 +93,6 @@ Mesh::~Mesh()
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
     delete texture;
-    delete material;
 }
 
 void Mesh::draw() const

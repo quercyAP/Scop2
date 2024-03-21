@@ -198,6 +198,7 @@ Mesh ObjLoader::createMesh()
 void ObjLoader::processVertex(const Face &face, int index, vector<float> &flatVertices, vector<float> &flatNormals, vector<float> &flatTextures, const vector<Vec3> &vertexNormals)
 {
     int vertexIndex = face.vertexIndices[index] - 1;
+    const Vertex& v = vertices[vertexIndex];
     flatVertices.push_back(vertices[vertexIndex].x);
     flatVertices.push_back(vertices[vertexIndex].y);
     flatVertices.push_back(vertices[vertexIndex].z);
@@ -211,6 +212,11 @@ void ObjLoader::processVertex(const Face &face, int index, vector<float> &flatVe
         int texIndex = face.textureIndices[index] - 1;
         flatTextures.push_back(textureCoords[texIndex].u);
         flatTextures.push_back(textureCoords[texIndex].v);
+    }
+    else
+    {
+        flatTextures.push_back((v.x + 1.0f) * 0.5f);
+        flatTextures.push_back((v.y + 1.0f) * 0.5f);
     }
 }
 

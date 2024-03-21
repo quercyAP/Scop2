@@ -13,19 +13,37 @@ struct Material {
     bool hasTexture;
 };
 
+struct Light {
+    vec3 position;
+    vec3 color;
+};
+
+uniform Light light;
 uniform Material material;
 uniform vec3 viewPos;
+uniform sampler2D texture_diffuse;
 
 void main()
 {
-    vec3 ambient = material.ambient;
-    vec3 diffuse = material.diffuse * max(dot(normalize(Normal), normalize(-FragPos)), 0.0);
-    vec3 specular = material.specular * pow(max(dot(viewPos, reflect(-normalize(FragPos), normalize(Normal))), 0.0), material.shininess);
+    // Calcul de l'ambiance
+    vec3 ambient = material.ambient * light.color;
+    
+    // Calcul de la lumière diffuse
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(light.position - FragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = material.diffuse * diff * light.color;
+    
+    // Calcul de la lumière spéculaire
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    vec3 specular = material.specular * spec * light.color;
     
     vec3 result = ambient + diffuse + specular;
-    if(material.hasTexture)
-    {
-        result *= texture(0, TexCoords).rgb;
+    if(material.hasTexture) {
+        result *= texture(texture_diffuse, TexCoords).rgb;
     }
     FragColor = vec4(result, 1.0);
 }
+
