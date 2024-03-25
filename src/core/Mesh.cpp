@@ -16,13 +16,14 @@ Mesh::Mesh(const std::vector<float> &vertices,
            const std::vector<float> &normals,
            const std::vector<float> &textureCoords,
            const std::vector<unsigned int> &indices,
-           const Material *material) 
+           const Material *material,
+           const std::string &texturePath) 
 {
     std::vector<float> combinedData;
     bool hasNormals = !normals.empty();
     bool hasTextureCoords = !textureCoords.empty();
     this->material = material;
-    texture = new Texture("assets/kitten.bmp");
+    texture = new Texture(texturePath);
 
     for (size_t i = 0; i < vertices.size() / 3; i++)
     {

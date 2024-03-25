@@ -20,7 +20,7 @@
 
 class Application {
 public:
-    Application();
+    Application(const string &objPath, const string &texturePath);
     ~Application();
 
     void run();

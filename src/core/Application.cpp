@@ -12,19 +12,19 @@
 
 #include "Application.hpp"
 
-Application::Application() : mesh(nullptr), shader(nullptr), window(nullptr),
+Application::Application(const string &objPath, const string &texturePath) : mesh(nullptr), shader(nullptr), window(nullptr),
                              deltaTime(0.0f), camera(Vec3(5.0f, 0.0f, 5.0f), Vec3(0.0f, 1.0f, 0.0f), 45.0f, 0.0f),
                              isRotationMode(false)
 {
     initWindow();
     initOpenGL();
 
-    if (objLoader.loadObj("assets/teapot.obj") == false)
+    if (objLoader.loadObj(objPath) == false)
     {
         cerr << "Failed to load OBJ file" << endl;
         exit(-1);
     }
-    mesh = new Mesh(objLoader.createMesh());
+    mesh = new Mesh(objLoader.createMesh(texturePath));
     mesh->transform.calculateCenter(objLoader.vertices);
     shader = new ShaderProgram("shader/shader.vert", "shader/shader.frag");
 }
@@ -102,8 +102,6 @@ void Application::processInput()
         camera.processKeyboardMovement(false, false, true, false, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.processKeyboardMovement(false, false, false, true, deltaTime);
-
-    // Ajoutez ici la gestion des entrées pour la rotation de la caméra basée sur les mouvements de la souris si nécessaire
 
     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
     {

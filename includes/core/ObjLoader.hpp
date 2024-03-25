@@ -45,7 +45,7 @@ public:
     string currentMaterialName;
 
     bool loadObj(const string &path);
-    Mesh createMesh();
+    Mesh createMesh(const string &texturePath);
 
 private:
     void processVertex(const Face &face, int index, vector<float> &flatVertices, vector<float> &flatNormals, vector<float> &flatTextures, const vector<Vec3> &vertexNormals);

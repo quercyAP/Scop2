@@ -151,7 +151,7 @@ void ObjLoader::adjustVerticesToCenter(const Vec3 &center)
     }
 }
 
-Mesh ObjLoader::createMesh()
+Mesh ObjLoader::createMesh(const string &texturePath)
 {
     vector<float> flatVertices;
     vector<float> flatNormals;
@@ -192,7 +192,7 @@ Mesh ObjLoader::createMesh()
     {
         indices.push_back(i);
     }
-    return Mesh(flatVertices, flatNormals, flatTextures, indices, materialManager.getMaterial(currentMaterialName));
+    return Mesh(flatVertices, flatNormals, flatTextures, indices, materialManager.getMaterial(currentMaterialName), texturePath);
 }
 
 void ObjLoader::processVertex(const Face &face, int index, vector<float> &flatVertices, vector<float> &flatNormals, vector<float> &flatTextures, const vector<Vec3> &vertexNormals)

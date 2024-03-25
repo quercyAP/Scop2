@@ -27,7 +27,8 @@ public:
          const vector<float>& normals,
          const vector<float>& textureCoords,
          const vector<unsigned int>& indices,
-         const Material* material);
+         const Material* material,
+         const string& texturePath);
     ~Mesh();
 
     void draw() const;
