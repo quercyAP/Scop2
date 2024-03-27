@@ -1,9 +1,11 @@
 # 3D Object Viewer
-
+<div>
+  <img src="screenshot/42.png" width="250" height="200">
+  <img src="screenshot/sci-fi.png" width="250" height="200">
+<div>
+  
 ## Overview
 This 3D Object Viewer is an application designed to display and interact with 3D models in a gratifying way. Developed with C++ and OpenGL, it renders a 3D object provided by the user in a `.obj` file format, with an optional texture in `.bmp` format applied. This project emphasizes manual parsing and rendering techniques, showcasing interactive features with the 3D model.
-
-
 
 ## Features
 - **3D Model Display**: Renders 3D objects in perspective, simulating depth by making distant objects appear smaller.
