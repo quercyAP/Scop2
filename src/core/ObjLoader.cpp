@@ -65,7 +65,7 @@ bool ObjLoader::loadObj(const string &path)
 
 void ObjLoader::parseUseMtl(istringstream &iss)
 {
-    iss >> currentMaterialName; // Supposons que `currentMaterialName` stocke le matériau actuel
+    iss >> currentMaterialName; 
 }
 
 void ObjLoader::parseVertex(istringstream &iss)
@@ -253,5 +253,21 @@ Vec3 ObjLoader::calculateFaceNormal(const vector<int> &vertexIndices)
     Vec3 edge1 = v1 - v0;
     Vec3 edge2 = v2 - v0;
 
-    return Vec3::cross(edge1, edge2).normalize();
+    Vec3 normal = Vec3::cross(edge1, edge2).normalize();
+
+    Vec3 center = calculateCenter();
+
+
+    // Vérifier si la normale est inversée
+    if (isNormalInverted(normal, v0, center))
+    {
+        return -normal;
+    }
+
+    return normal;
+}
+bool ObjLoader::isNormalInverted(const Vec3 &normal, const Vec3 &vertexPosition, const Vec3 &center)
+{
+    Vec3 toVertex = vertexPosition - center;
+    return Vec3::dot(normal, toVertex) < 0;
 }

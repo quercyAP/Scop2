@@ -58,6 +58,7 @@ private:
     void adjustVerticesToCenter(const Vec3 &center);
     void initializeVertexNormals(vector<Vec3> &vertexNormals);
     Vec3 calculateFaceNormal(const vector<int> &vertexIndices);
+    bool isNormalInverted(const Vec3 &normal, const Vec3 &vertexPosition, const Vec3 &center);
 };
 
 #endif

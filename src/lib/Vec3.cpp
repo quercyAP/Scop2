@@ -57,6 +57,12 @@ Vec3 Vec3::operator/=(float scalar)
     return *this;
 }
 
+std::ostream &operator<<(std::ostream &os, const Vec3 &vec)
+{
+    os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
+    return os;
+}
+
 Vec3 &Vec3::normalize()
 {
     float len = length();

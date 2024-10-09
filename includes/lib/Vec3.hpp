@@ -14,6 +14,7 @@
 #define VEC3_HPP
 
 #include <cmath>
+#include <iostream>
 
 class Vec3
 {
@@ -40,6 +41,8 @@ public:
 
     // Produit vectoriel
     static Vec3 cross(const Vec3 &a, const Vec3 &b);
+
+    friend std::ostream &operator<<(std::ostream &os, const Vec3 &vec);
 };
 
 #endif

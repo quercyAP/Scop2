@@ -80,7 +80,7 @@ void Application::initWindow()
 
 void Application::initOpenGL()
 {
-    glEnable(GL_DEPTH_TEST); 
+    glEnable(GL_DEPTH_TEST);
 }
 
 void Application::framebufferSizeCallback(GLFWwindow *window, int width, int height)
@@ -148,6 +148,13 @@ void Application::processInput()
         textureEnabled = !textureEnabled;
         usleep(100000);
     }
+
+    // Face mode
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+    {
+        faceMode = !faceMode;
+        usleep(100000);
+    }
 }
 
 void Application::render()
@@ -163,6 +170,8 @@ void Application::render()
     shader->setUniform("projection", camera.getProjectionMatrix(800.0f / 600.0f));
     shader->setUniform("light.position", lightPos);
     shader->setUniform("light.color", lightColor);
+
+    shader->setUniform("faceMode", faceMode);
 
     const float transitionSpeed = 0.01f;
 

@@ -39,6 +39,7 @@ private:
     bool isRotationMode;
     float textureMixFactor = 0.0f;
     bool textureEnabled = false;
+    bool faceMode = false;
 
     Vec3 lightPos = Vec3(1.2f, 1.0f, 2.0f);
     Vec3 lightColor = Vec3(1.0f, 1.0f, 1.0f);
