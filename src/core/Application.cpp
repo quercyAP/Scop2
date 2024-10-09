@@ -24,8 +24,10 @@ Application::Application(const string &objPath, const string &texturePath) : mes
         cerr << "Failed to load OBJ file" << endl;
         exit(-1);
     }
+    
     mesh = new Mesh(objLoader.createMesh(texturePath));
-    mesh->transform.calculateCenter(objLoader.vertices);
+    std:cout << "Creating mesh" << std::endl;
+    mesh->transform.calculateCenter(objLoader.vertices, 100);
     shader = new ShaderProgram("shader/shader.vert", "shader/shader.frag");
 }
 

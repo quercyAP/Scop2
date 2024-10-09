@@ -28,6 +28,7 @@ public:
 
     Mat4 getTransformationMatrix() const;
     void calculateCenter(const vector<Vertex> &vertices);
+    void calculateCenter(const vector<Vertex> &vertices, int sampleRate);
 };
 
 #endif 

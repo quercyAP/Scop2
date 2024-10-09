@@ -22,6 +22,26 @@ void Transform::calculateCenter(const std::vector<Vertex>& vertices) {
     center = sum / vertices.size();
 }
 
+void Transform::calculateCenter(const std::vector<Vertex>& vertices, int sampleRate) {
+    Vec3 sum(0, 0, 0);
+    size_t count = 0;
+
+    // Échantillonner un sommet tous les "sampleRate" sommets
+    for (size_t i = 0; i < vertices.size(); i += sampleRate) {
+        const Vertex& vertex = vertices[i];
+        sum += Vec3(vertex.x, vertex.y, vertex.z);
+        ++count;
+    }
+
+    // Si aucun sommet n'a été échantillonné, éviter la division par zéro
+    if (count == 0) {
+        center = Vec3(0, 0, 0); // Valeur par défaut si aucune donnée
+        return;
+    }
+
+    center = sum / static_cast<float>(count);
+}
+
 Mat4 Transform::getTransformationMatrix() const {
     // Première translation pour recentrer l'objet à son origine
     Mat4 initialTranslation = Mat4::translate(-center);

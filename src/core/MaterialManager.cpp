@@ -35,7 +35,7 @@ const Material* MaterialManager::getMaterial(const string& name) const {
 void MaterialManager::parseMtlFile(ifstream& file) {
     string line;
     Material currentMaterial;
-    string materialName;
+    string materialName;    
 
     while (getline(file, line)) {
         istringstream lineStream(line);

@@ -141,6 +141,24 @@ Vec3 ObjLoader::calculateCenter()
     return sum / vertices.size();
 }
 
+Vec3 ObjLoader::calculateCenterSampled(int sampleRate)
+{
+    Vec3 sum(0.0f, 0.0f, 0.0f);
+    size_t count = 0;
+
+    for (size_t i = 0; i < vertices.size(); i += sampleRate)
+    {
+        const Vertex& vertex = vertices[i];
+        sum += Vec3(vertex.x, vertex.y, vertex.z);
+        ++count;
+    }
+
+    // Si aucun sommet n'a été échantillonné, retourner le centre d'origine
+    if (count == 0)
+        return Vec3(0.0f, 0.0f, 0.0f);
+    return sum / static_cast<float>(count);
+}
+
 void ObjLoader::adjustVerticesToCenter(const Vec3 &center)
 {
     for (auto &vertex : vertices)
@@ -158,7 +176,7 @@ Mesh ObjLoader:: createMesh(const string &texturePath)
     vector<float> flatTextures;
     vector<unsigned int> indices;
 
-    Vec3 center = calculateCenter();
+    Vec3 center = calculateCenterSampled(100);
     adjustVerticesToCenter(center);
 
     vector<Vec3> vertexNormals;
@@ -189,6 +207,11 @@ Mesh ObjLoader:: createMesh(const string &texturePath)
             { // Deuxième triangle
                 processVertex(face, i, flatVertices, flatNormals, flatTextures, vertexNormals);
             }
+        }
+        else
+        { // Gestion des faces avec plus de 4 sommets
+            cerr << "Face with more than 4 vertices detected. Skipping." << endl;
+            continue;
         }
     }
 

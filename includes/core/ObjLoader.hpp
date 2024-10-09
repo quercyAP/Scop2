@@ -55,6 +55,7 @@ private:
     void parseFace(istringstream &iss);
     void parseUseMtl(istringstream& iss);
     Vec3 calculateCenter();
+    Vec3 calculateCenterSampled(int sampleRate);
     void adjustVerticesToCenter(const Vec3 &center);
     void initializeVertexNormals(vector<Vec3> &vertexNormals);
     Vec3 calculateFaceNormal(const vector<int> &vertexIndices);
