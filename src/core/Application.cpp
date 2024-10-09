@@ -69,7 +69,7 @@ void Application::initWindow()
         exit(-1);
     }
     glfwMakeContextCurrent(window);
-    glewExperimental = GL_TRUE; // Nécessaire dans le profil de base
+    glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK)
     {
         std::cerr << "Failed to initialize GLEW" << std::endl;
@@ -80,7 +80,7 @@ void Application::initWindow()
 
 void Application::initOpenGL()
 {
-    glEnable(GL_DEPTH_TEST); // Active le test de profondeur pour le rendu 3D correct
+    glEnable(GL_DEPTH_TEST); 
 }
 
 void Application::framebufferSizeCallback(GLFWwindow *window, int width, int height)
@@ -141,18 +141,17 @@ void Application::processInput()
         if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
             mesh->transform.center += Vec3(0.0f, 0.1f, 0.0f); // Descendre
     }
+
+    // Gestion de la texture
+    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
+    {
+        textureEnabled = !textureEnabled;
+        usleep(100000);
+    }
 }
 
 void Application::render()
 {
-    // a sortir d'ici car instancié à chaque frame
-    Vec3 lightPos = Vec3(1.2f, 1.0f, 2.0f);
-    Vec3 lightColor = Vec3(0.5f, 0.5f, 0.5f);
-    Vec3 defaultAmbient = Vec3(0.1f, 0.1f, 0.1f);
-    Vec3 defaultDiffuse = Vec3(0.7f, 0.7f, 0.7f);
-    Vec3 defaultSpecular = Vec3(1.0f, 1.0f, 1.0f);
-    float defaultShininess = 32.0f;
-
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -164,6 +163,23 @@ void Application::render()
     shader->setUniform("projection", camera.getProjectionMatrix(800.0f / 600.0f));
     shader->setUniform("light.position", lightPos);
     shader->setUniform("light.color", lightColor);
+
+    const float transitionSpeed = 0.01f;
+
+    if (textureEnabled)
+    {
+        textureMixFactor += transitionSpeed;
+        if (textureMixFactor > 1.0f)
+            textureMixFactor = 1.0f;
+    }
+    else
+    {
+        textureMixFactor -= transitionSpeed;
+        if (textureMixFactor < 0.0f)
+            textureMixFactor = 0.0f;
+    }
+
+    shader->setUniform("textureMixFactor", textureMixFactor);
 
     bool hasTexture = mesh->texture && mesh->texture->hasTexture;
     shader->setUniform("material.hasTexture", hasTexture);
@@ -189,7 +205,6 @@ void Application::render()
         shader->setUniform("material.shininess", defaultShininess);
     }
 
-    // Dessiner vos objets Mesh ici
     mesh->draw();
 }
-}
+

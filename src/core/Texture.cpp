@@ -11,38 +11,64 @@
 /* ************************************************************************** */
 
 #include "Texture.hpp"
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
-Texture::Texture(const string& filePath) : textureID(0) {
-    int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char* data = stbi_load(filePath.c_str(), &width, &height, &nrChannels, 0);
+Texture::Texture(const std::string &filePath) : textureID(0) {
+    if (filePath.empty()) {
+        hasTexture = false;
+        return;
+    }
+    loadBMP(filePath);
     if (data) {
-        GLenum format;
-        if (nrChannels == 1)
-            format = GL_RED;
-        else if (nrChannels == 3)
-            format = GL_RGB;
-        else if (nrChannels == 4)
-            format = GL_RGBA;
-
         glGenTextures(1, &textureID);
         glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         hasTexture = true;
-
-        stbi_image_free(data);
+        delete[] data;
     } else {
-        cerr << "Failed to load texture: " << filePath << endl;
+        std::cerr << "Failed to load texture: " << filePath << std::endl;
         hasTexture = false;
     }
+}
+
+void Texture::loadBMP(const std::string &filePath) {
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open BMP file: " << filePath << std::endl;
+        return;
+    }
+
+    BMPHeader bmpHeader;
+    DIBHeader dibHeader;
+
+    file.read(reinterpret_cast<char *>(&bmpHeader), sizeof(bmpHeader));
+    file.read(reinterpret_cast<char *>(&dibHeader), sizeof(dibHeader));
+
+    if (bmpHeader.fileType != 0x4D42 || dibHeader.bitCount != 24) {
+        std::cerr << "Unsupported BMP format: " << filePath << std::endl;
+        return;
+    }
+
+    width = dibHeader.width;
+    height = dibHeader.height;
+    channels = 3;
+
+    file.seekg(bmpHeader.offsetData, file.beg);
+
+    size_t dataSize = width * height * channels;
+    data = new unsigned char[dataSize];
+
+    file.read(reinterpret_cast<char *>(data), dataSize);
+
+    for (int y = 0; y < height / 2; ++y) {
+        for (int x = 0; x < width * channels; ++x) {
+            std::swap(data[y * width * channels + x], data[(height - 1 - y) * width * channels + x]);
+        }
+    }
+
+    file.close();
 }
 
 Texture::~Texture() {

@@ -151,7 +151,7 @@ void ObjLoader::adjustVerticesToCenter(const Vec3 &center)
     }
 }
 
-Mesh ObjLoader::createMesh(const string &texturePath)
+Mesh ObjLoader:: createMesh(const string &texturePath)
 {
     vector<float> flatVertices;
     vector<float> flatNormals;
@@ -166,6 +166,11 @@ Mesh ObjLoader::createMesh(const string &texturePath)
 
     for (const auto &face : faces)
     {
+        if (face.vertexIndices.size() < 3)
+        {
+            cerr << "Face with less than 3 vertices detected. Skipping." << endl;
+            continue;
+        }
         if (face.vertexIndices.size() == 3)
         { // Gestion des triangles
             for (int i = 0; i < 3; ++i)
@@ -185,7 +190,6 @@ Mesh ObjLoader::createMesh(const string &texturePath)
                 processVertex(face, i, flatVertices, flatNormals, flatTextures, vertexNormals);
             }
         }
-        // Extension possible pour des polygones à plus de 4 sommets
     }
 
     for (size_t i = 0; i < flatVertices.size() / 3; ++i)

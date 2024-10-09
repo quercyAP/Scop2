@@ -35,7 +35,17 @@ private:
     bool firstMouse = true;
     float lastX = 800 / 2.0f;
     float lastY = 600 / 2.0f;
+
     bool isRotationMode;
+    float textureMixFactor = 0.0f;
+    bool textureEnabled = false;
+
+    Vec3 lightPos = Vec3(1.2f, 1.0f, 2.0f);
+    Vec3 lightColor = Vec3(1.0f, 1.0f, 1.0f);
+    Vec3 defaultAmbient = Vec3(0.1f, 0.1f, 0.1f);
+    Vec3 defaultDiffuse = Vec3(0.7f, 0.7f, 0.7f);
+    Vec3 defaultSpecular = Vec3(1.0f, 1.0f, 1.0f);
+    float defaultShininess = 32.0f;
 
     static void framebufferSizeCallback(GLFWwindow* window, int width, int height);
     void processInput();

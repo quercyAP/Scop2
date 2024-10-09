@@ -11,6 +11,7 @@ struct Material {
     vec3 specular;
     float shininess;
     bool hasTexture;
+    sampler2D texture_diffuse;
 };
 
 struct Light {
@@ -21,7 +22,8 @@ struct Light {
 uniform Light light;
 uniform Material material;
 uniform vec3 viewPos;
-uniform sampler2D texture_diffuse;
+
+uniform float textureMixFactor;
 
 void main()
 {
@@ -42,7 +44,9 @@ void main()
     
     vec3 result = ambient + diffuse + specular;
     if(material.hasTexture) {
-        result *= texture(texture_diffuse, TexCoords).rgb;
+        vec3 textureColor = texture(material.texture_diffuse, TexCoords).rgb;
+
+        result = mix(result, textureColor * (ambient + diffuse), textureMixFactor);
     }
     FragColor = vec4(result, 1.0);
 }
