@@ -26,7 +26,6 @@ Application::Application(const string &objPath, const string &texturePath) : mes
     }
     
     mesh = new Mesh(objLoader.createMesh(texturePath));
-    std:cout << "Creating mesh" << std::endl;
     mesh->transform.calculateCenter(objLoader.vertices, 100);
     shader = new ShaderProgram("shader/shader.vert", "shader/shader.frag");
 }

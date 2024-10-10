@@ -22,6 +22,7 @@
 #include <sstream>
 #include <cmath>
 #include <cstring>
+#include <float.h>
 #include "Vec3.hpp"
 #include "Mat4.hpp"
 

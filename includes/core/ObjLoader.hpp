@@ -37,12 +37,13 @@ struct Face
 class ObjLoader
 {
 public:
-    vector<Vertex> vertices;
     vector<Normal> normals;
     vector<TextureCoord> textureCoords;
     vector<Face> faces;
     MaterialManager materialManager;
     string currentMaterialName;
+    vector<float> vertices;
+
 
     bool loadObj(const string &path);
     Mesh createMesh(const string &texturePath);
@@ -54,12 +55,16 @@ private:
     void parseTextureCoord(istringstream &iss);
     void parseFace(istringstream &iss);
     void parseUseMtl(istringstream& iss);
+    void generateDefaultUVs();
     Vec3 calculateCenter();
     Vec3 calculateCenterSampled(int sampleRate);
     void adjustVerticesToCenter(const Vec3 &center);
     void initializeVertexNormals(vector<Vec3> &vertexNormals);
     Vec3 calculateFaceNormal(const vector<int> &vertexIndices);
+    void calculateBoundingBox(Vec3 &minBounds, Vec3 &maxBounds);
     bool isNormalInverted(const Vec3 &normal, const Vec3 &vertexPosition, const Vec3 &center);
+    void generateUVsBasedOnBoundingBox(const Vec3& minBounds, const Vec3& maxBounds);
+    void generateUVsFromBoundingBox3D(const Vec3& minBounds, const Vec3& maxBounds);
 };
 
 #endif
