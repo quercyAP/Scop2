@@ -42,7 +42,7 @@ public:
     vector<Face> faces;
     MaterialManager materialManager;
     string currentMaterialName;
-    vector<float> vertices;
+    vector<Vertex> vertices;
 
 
     bool loadObj(const string &path);
@@ -55,8 +55,8 @@ private:
     void parseTextureCoord(istringstream &iss);
     void parseFace(istringstream &iss);
     void parseUseMtl(istringstream& iss);
-    void generateDefaultUVs();
     Vec3 calculateCenter();
+    void generateSphericalUVs();
     Vec3 calculateCenterSampled(int sampleRate);
     void adjustVerticesToCenter(const Vec3 &center);
     void initializeVertexNormals(vector<Vec3> &vertexNormals);

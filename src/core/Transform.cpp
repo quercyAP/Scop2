@@ -33,15 +33,15 @@ void Transform::calculateCenter(const vector<float>& vertices) {
     }
 }
 
-void Transform::calculateCenter(const vector<float>& vertices, int sampleRate) {
+void Transform::calculateCenter(const vector<Vertex>& vertices, int sampleRate) {
     Vec3 sum(0, 0, 0);
     size_t count = 0;
 
     // Échantillonner un sommet tous les "sampleRate" sommets (chaque sommet a 3 floats)
     for (size_t i = 0; i < vertices.size(); i += 3 * sampleRate) {
-        sum.x += vertices[i];     // Coordonnée x
-        sum.y += vertices[i + 1]; // Coordonnée y
-        sum.z += vertices[i + 2]; // Coordonnée z
+        sum.x += vertices[i].x;     // Coordonnée x
+        sum.y += vertices[i].y; // Coordonnée y
+        sum.z += vertices[i].z; // Coordonnée z
         ++count;
     }
 

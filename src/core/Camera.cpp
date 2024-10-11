@@ -13,7 +13,7 @@
 #include "Camera.hpp"
 
 Camera::Camera(Vec3 position, Vec3 up, float yaw, float pitch)
-    : front(Vec3(0.0f, 0.0f, -1.0f)), movementSpeed(2.5f), mouseSensitivity(0.1f), zoom(45.0f)
+    : front(Vec3(0.0f, 0.0f, 1.0f)), movementSpeed(20.0f), mouseSensitivity(0.1f), zoom(45.0f)
 {
     this->position = position;
     this->worldUp = up;
@@ -40,8 +40,8 @@ void Camera::processMouseMovement(float xoffset, float yoffset, bool constrainPi
     xoffset *= mouseSensitivity;
     yoffset *= mouseSensitivity;
 
-    yaw += xoffset;
-    pitch += yoffset;
+    yaw -= xoffset;
+    pitch -= yoffset;
 
     if (constrainPitch)
     {
@@ -71,7 +71,7 @@ Mat4 Camera::getViewMatrix() const
 
 Mat4 Camera::getProjectionMatrix(float aspectRatio) const
 {
-    return Mat4::perspective(zoom, aspectRatio, 0.1f, 100.0f);
+    return Mat4::perspective(zoom, aspectRatio, 0.1f, 1000.0f);
 }
 
 void Camera::updateCameraVectors()
@@ -89,4 +89,14 @@ void Camera::updateCameraVectors()
 float Camera::toRadians(float degrees) const
 {
     return degrees * M_PI / 180.0f;
+}
+
+void Camera::processPanMovement(float xoffset, float yoffset) {
+    xoffset *= mouseSensitivity;
+    yoffset *= mouseSensitivity;
+
+    Vec3 panRight = right * xoffset;
+    Vec3 panUp = up * yoffset;
+
+    position = position + panRight - panUp;
 }

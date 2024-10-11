@@ -44,10 +44,13 @@ public:
 
     Mat4 getProjectionMatrix(float aspectRatio) const;
 
+    void processPanMovement(float xoffset, float yoffset);
+    
 private:
     void updateCameraVectors();
 
     float toRadians(float degrees) const;
+
 };
 
 #endif

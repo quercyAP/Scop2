@@ -23,7 +23,6 @@ OBJECTS_DEBUG	=	$(addprefix $(OBJ_DIR_DEBUG), $(OBJ_FILE))
 
 NAME			=	scop
 CC				=	c++
-# CCFLAG			=	-Wall -Wextra -Werror -Wno-unknown-pragmas
 
 HDR_FLAGS		= -I includes \
 				 -I includes/lib \

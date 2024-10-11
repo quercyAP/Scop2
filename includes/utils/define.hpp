@@ -28,6 +28,7 @@
 
 struct Vertex {
     float x, y, z;
+    float texX, texY;
 
     Vec3 toVec3() const {
         return Vec3(x, y, z);

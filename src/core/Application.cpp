@@ -14,7 +14,7 @@
 
 Application::Application(const string &objPath, const string &texturePath) : mesh(nullptr), shader(nullptr), window(nullptr),
                              deltaTime(0.0f), camera(Vec3(5.0f, 0.0f, 5.0f), Vec3(0.0f, 1.0f, 0.0f), 45.0f, 0.0f),
-                             isRotationMode(false)
+                             isRotationMode(false) , firstMouse(true), mouseLastX(0.0f), mouseLastY(0.0f), isMiddleMousePressed(false), isPanning(false)
 {
     initWindow();
     initOpenGL();
@@ -77,6 +77,10 @@ void Application::initWindow()
         exit(-1);
     }
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+    glfwSetWindowUserPointer(window, this);
+    glfwSetCursorPosCallback(window, Application::mouseCallback);
+    glfwSetMouseButtonCallback(window, Application::mouseButtonCallback);
+    glfwSetScrollCallback(window, Application::scrollCallback);
 }
 
 void Application::initOpenGL()
@@ -96,9 +100,9 @@ void Application::processInput()
 
     // Gestion des mouvements de la caméra
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.processKeyboardMovement(true, false, false, false, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         camera.processKeyboardMovement(false, true, false, false, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.processKeyboardMovement(true, false, false, false, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         camera.processKeyboardMovement(false, false, true, false, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
@@ -157,6 +161,63 @@ void Application::processInput()
         usleep(100000);
     }
 }
+
+void Application::mouseCallback(GLFWwindow* window, double xpos, double ypos) {
+    Application* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+    app->handleMouseMovement(xpos, ypos);
+}
+
+void Application::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    Application* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+    app->handleMouseButton(button, action, mods);
+}
+
+void Application::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+    Application* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+    app->handleMouseScroll(yoffset);
+}
+
+void Application::handleMouseMovement(double xpos, double ypos) {
+    if (!isMiddleMousePressed) {
+        return; 
+    }
+
+    if (firstMouse) {
+        mouseLastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - mouseLastX;
+    float yoffset = lastY - ypos;
+
+    mouseLastX = xpos;
+    lastY = ypos;
+
+    if (isPanning) {
+        camera.processPanMovement(xoffset, yoffset);
+    } else {
+        camera.processMouseMovement(xoffset, yoffset, true);
+    }
+}
+
+void Application::handleMouseButton(int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+        if (action == GLFW_PRESS) {
+            isMiddleMousePressed = true;
+            isPanning = mods & GLFW_MOD_SHIFT;  
+            firstMouse = true;
+        } else if (action == GLFW_RELEASE) {
+            isMiddleMousePressed = false;
+            isPanning = false;
+        }
+    }
+}
+
+void Application::handleMouseScroll(double yoffset) {
+    camera.processMouseScroll(yoffset);
+}
+
 
 void Application::render()
 {

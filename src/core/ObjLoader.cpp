@@ -44,8 +44,6 @@ bool ObjLoader::loadObj(const string &path)
     normals.reserve(normalCount);
     faces.reserve(faceCount);
 
-    bool hasUVs = false;
-    // Parsing réel des données
     while (getline(file, line))
     {
         istringstream iss(line);
@@ -59,7 +57,6 @@ bool ObjLoader::loadObj(const string &path)
         else if (prefix == "vt")
         {
             parseTextureCoord(iss);
-            hasUVs = true;
         }
         else if (prefix == "vn")
         {
@@ -85,12 +82,10 @@ bool ObjLoader::loadObj(const string &path)
         }
     }
 
-    if (!hasUVs)
+    if (textureCoords.empty())
     {
         cout << "texture coords not found, generating default UVs" << endl;
-        Vec3 minBounds, maxBounds;
-        calculateBoundingBox(minBounds, maxBounds);
-        generateUVsFromBoundingBox3D(minBounds, maxBounds);
+        generateSphericalUVs();
     }
 
     return true;
@@ -103,11 +98,9 @@ void ObjLoader::parseUseMtl(istringstream &iss)
 
 void ObjLoader::parseVertex(istringstream &iss)
 {
-    float x, y, z;
-    iss >> x >> y >> z;
-    vertices.push_back(x);
-    vertices.push_back(y);
-    vertices.push_back(z);
+    Vertex vertex;
+    iss >> vertex.x >> vertex.y >> vertex.z;
+    vertices.push_back(vertex);
 }
 
 void ObjLoader::parseNormal(istringstream &iss)
@@ -119,9 +112,9 @@ void ObjLoader::parseNormal(istringstream &iss)
 
 void ObjLoader::parseTextureCoord(istringstream &iss)
 {
-    TextureCoord tc;
-    iss >> tc.u >> tc.v;
-    textureCoords.push_back(tc);
+    float u, v;
+    iss >> u >> v;
+    textureCoords.push_back(TextureCoord{u, v});
 }
 
 void ObjLoader::parseFace(istringstream &iss)
@@ -158,12 +151,8 @@ void ObjLoader::parseFace(istringstream &iss)
         // Ajouter les indices à la face. Notez que -1 est utilisé pour indiquer l'absence d'un indice.
         if (vertexIndex != -1)
             face.vertexIndices.push_back(vertexIndex);
-        if (textureIndex != -1) 
-        {
+        if (textureIndex != -1)
             face.textureIndices.push_back(textureIndex);
-        } else {
-            face.textureIndices.push_back(vertexIndex);
-        }
         if (normalIndex != -1)
             face.normalIndices.push_back(normalIndex);
     }
@@ -173,41 +162,37 @@ void ObjLoader::parseFace(istringstream &iss)
 Vec3 ObjLoader::calculateCenter()
 {
     Vec3 sum(0.0f, 0.0f, 0.0f);
-    size_t vertexCount = vertices.size() / 3;
-
-    for (size_t i = 0; i < vertices.size(); i += 3)
+    for (const auto &vertex : vertices)
     {
-        sum.x += vertices[i];
-        sum.y += vertices[i + 1];
-        sum.z += vertices[i + 2];
+        sum.x += vertex.x;
+        sum.y += vertex.y;
+        sum.z += vertex.z;
     }
-
-    return sum / static_cast<float>(vertexCount);
+    return sum / static_cast<float>(vertices.size());
 }
 
 Vec3 ObjLoader::calculateCenterSampled(int sampleRate)
 {
     Vec3 sum(0.0f, 0.0f, 0.0f);
-    size_t count = 0;
 
-    for (size_t i = 0; i < vertices.size(); i += 3 * sampleRate)
+    int count = 0;
+    for (size_t i = 0; i < vertices.size(); i += sampleRate)
     {
-        sum.x += vertices[i];
-        sum.y += vertices[i + 1];
-        sum.z += vertices[i + 2];
-        ++count;
+        sum.x += vertices[i].x;
+        sum.y += vertices[i].y;
+        sum.z += vertices[i].z;
+        count++;
     }
-
     return count > 0 ? sum / static_cast<float>(count) : Vec3(0.0f, 0.0f, 0.0f);
 }
 
 void ObjLoader::adjustVerticesToCenter(const Vec3 &center)
 {
-    for (size_t i = 0; i < vertices.size(); i += 3)
+    for (auto &vertex : vertices)
     {
-        vertices[i] -= center.x;
-        vertices[i + 1] -= center.y;
-        vertices[i + 2] -= center.z;
+        vertex.x -= center.x;
+        vertex.y -= center.y;
+        vertex.z -= center.z;
     }
 }
 
@@ -264,28 +249,55 @@ Mesh ObjLoader::createMesh(const string &texturePath)
     return Mesh(flatVertices, flatNormals, flatTextures, indices, materialManager.getMaterial(currentMaterialName), texturePath);
 }
 
-void ObjLoader::processVertex(const Face &face, int index, vector<float> &flatVertices, vector<float> &flatNormals, vector<float> &flatTextures, const vector<Vec3> &vertexNormals)
+void ObjLoader::processVertex(const Face &face, int index, vector<float> &flatVertices,
+                              vector<float> &flatNormals, vector<float> &flatTextures,
+                              const vector<Vec3> &vertexNormals)
 {
-    int vertexIndex = (face.vertexIndices[index] - 1) * 3;
-    flatVertices.push_back(vertices[vertexIndex]);
-    flatVertices.push_back(vertices[vertexIndex + 1]);
-    flatVertices.push_back(vertices[vertexIndex + 2]);
+    int vertexIndex = face.vertexIndices[index] - 1;
+    const Vertex &v = vertices[vertexIndex];
 
-    flatNormals.push_back(vertexNormals[vertexIndex / 3].x);
-    flatNormals.push_back(vertexNormals[vertexIndex / 3].y);
-    flatNormals.push_back(vertexNormals[vertexIndex / 3].z);
+    // Ajouter les positions du sommet
+    flatVertices.push_back(v.x);
+    flatVertices.push_back(v.y);
+    flatVertices.push_back(v.z);
 
-    int textureIndex = face.textureIndices[index] - 1;
-    const TextureCoord &tc = textureCoords[textureIndex];
-    flatTextures.push_back(tc.u);
-    flatTextures.push_back(tc.v);
+    // Ajouter les normales
+    flatNormals.push_back(vertexNormals[vertexIndex].x);
+    flatNormals.push_back(vertexNormals[vertexIndex].y);
+    flatNormals.push_back(vertexNormals[vertexIndex].z);
+
+    // Ajouter les UV
+    if (!face.textureIndices.empty())
+    {
+        cout << "Face Texture Indice trouver" << endl;
+        // Si les indices de texture sont présents dans la face, les utiliser
+        int texIndex = face.textureIndices[index] - 1;
+        const TextureCoord &tc = textureCoords[texIndex];
+        flatTextures.push_back(tc.u);
+        flatTextures.push_back(tc.v);
+    }
+    else if (!textureCoords.empty())
+    {
+        cout << "Texture Coords trouver" << endl;
+        // Si les indices ne sont pas présents mais que les coordonnées de texture existent, les utiliser
+        const TextureCoord &tc = textureCoords[vertexIndex];
+        flatTextures.push_back(tc.u);
+        flatTextures.push_back(tc.v);
+    }
+    else
+    {
+        cout << "Texture Coords generer" << endl;
+        // Générer des UV par défaut si aucune coordonnée de texture n'est présente
+        flatTextures.push_back(v.texX);
+        flatTextures.push_back(v.texY);
+    }
 }
 
 void ObjLoader::initializeVertexNormals(vector<Vec3> &vertexNormals)
 {
     if (vertexNormals.empty())
     {
-        vertexNormals.resize(vertices.size() / 3, Vec3(0, 0, 0));
+        vertexNormals.resize(vertices.size(), Vec3(0, 0, 0));
     }
 
     // Calcul des normales
@@ -295,11 +307,9 @@ void ObjLoader::initializeVertexNormals(vector<Vec3> &vertexNormals)
 
         for (int vertexIndex : face.vertexIndices)
         {
-            vertexIndex = (vertexIndex - 1) * 3;
-            vertexNormals[vertexIndex / 3] += normal;
+            vertexNormals[vertexIndex - 1] += normal;
         }
     }
-
     // Normalisation des normales
     for (Vec3 &normal : vertexNormals)
     {
@@ -309,12 +319,12 @@ void ObjLoader::initializeVertexNormals(vector<Vec3> &vertexNormals)
 
 Vec3 ObjLoader::calculateFaceNormal(const vector<int> &vertexIndices)
 {
-    Vec3 v0 = Vec3(vertices[(vertexIndices[0] - 1) * 3], vertices[(vertexIndices[0] - 1) * 3 + 1], vertices[(vertexIndices[0] - 1) * 3 + 2]);
-    Vec3 v1 = Vec3(vertices[(vertexIndices[1] - 1) * 3], vertices[(vertexIndices[1] - 1) * 3 + 1], vertices[(vertexIndices[1] - 1) * 3 + 2]);
-    Vec3 v2 = Vec3(vertices[(vertexIndices[2] - 1) * 3], vertices[(vertexIndices[2] - 1) * 3 + 1], vertices[(vertexIndices[2] - 1) * 3 + 2]);
+    const Vertex &v0 = vertices[vertexIndices[0] - 1];
+    const Vertex &v1 = vertices[vertexIndices[1] - 1];
+    const Vertex &v2 = vertices[vertexIndices[2] - 1];
 
-    Vec3 edge1 = v1 - v0;
-    Vec3 edge2 = v2 - v0;
+    Vec3 edge1 = v1.toVec3() - v0.toVec3();
+    Vec3 edge2 = v2.toVec3() - v0.toVec3();
 
     return Vec3::cross(edge1, edge2).normalize();
 }
@@ -325,75 +335,30 @@ bool ObjLoader::isNormalInverted(const Vec3 &normal, const Vec3 &vertexPosition,
     return Vec3::dot(normal, toVertex) < 0;
 }
 
-void ObjLoader::calculateBoundingBox(Vec3 &minBounds, Vec3 &maxBounds)
+void ObjLoader::generateSphericalUVs()
 {
-    // Initialiser minBounds et maxBounds avec des valeurs extrêmes
-    minBounds = Vec3(FLT_MAX, FLT_MAX, FLT_MAX);
-    maxBounds = Vec3(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+    const float twoPi = 2.0f * M_PI;
 
-    // Parcourir tous les sommets pour trouver les valeurs minimales et maximales
-    for (size_t i = 0; i < vertices.size(); i += 3)
+    for (auto &vertex : vertices)
     {
-        // Comparer chaque coordonnée x, y, z avec les bornes actuelles et mettre à jour si nécessaire
-        minBounds.x = std::min(minBounds.x, vertices[i]);     // Coordonnée x
-        minBounds.y = std::min(minBounds.y, vertices[i + 1]); // Coordonnée y
-        minBounds.z = std::min(minBounds.z, vertices[i + 2]); // Coordonnée z
+        // Normalisation du vecteur de position du sommet
+        float length = sqrt(vertex.x * vertex.x + vertex.y * vertex.y + vertex.z * vertex.z);
+        if (length == 0) continue; // Éviter la division par zéro
 
-        maxBounds.x = std::max(maxBounds.x, vertices[i]);     // Coordonnée x
-        maxBounds.y = std::max(maxBounds.y, vertices[i + 1]); // Coordonnée y
-        maxBounds.z = std::max(maxBounds.z, vertices[i + 2]); // Coordonnée z
-    }
-}
+        float normX = vertex.x / length;
+        float normY = vertex.y / length;
+        float normZ = vertex.z / length;
 
-void ObjLoader::generateDefaultUVs()
-{
-    // Si nous avons des sommets mais pas de coordonnées UV, les générer
-    Vec3 minBounds, maxBounds;
-    calculateBoundingBox(minBounds, maxBounds);
+        // Calcul de theta et phi
+        float theta = atan2(normZ, normX);
+        float phi = acos(normY); // normY est déjà normalisé, pas besoin de diviser par le rayon
 
-    // Calculer les facteurs d'échelle pour normaliser les coordonnées UV
-    float scaleX = 1.0f / (maxBounds.x - minBounds.x);
-    float scaleY = 1.0f / (maxBounds.y - minBounds.y);
+        // Génération des coordonnées UV sphériques
+        vertex.texX = (theta + M_PI) / twoPi; // Mapping de theta à [0, 1]
+        vertex.texY = phi / M_PI;             // Mapping de phi à [0, 1]
 
-    // Générer des UV pour chaque sommet
-    for (size_t i = 0; i < vertices.size(); i += 3) {
-        float u = (vertices[i] - minBounds.x) * scaleX;     // Coordonnée x normalisée
-        float v = (vertices[i + 1] - minBounds.y) * scaleY; // Coordonnée y normalisée
-
-        // Ajouter les coordonnées UV générées
-        textureCoords.push_back(TextureCoord{u, v});
-    }
-}
-
-void ObjLoader::generateUVsFromBoundingBox3D(const Vec3& minBounds, const Vec3& maxBounds)
-{
-    float scaleX = 1.0f / (maxBounds.x - minBounds.x);
-    float scaleY = 1.0f / (maxBounds.y - minBounds.y);
-    float scaleZ = 1.0f / (maxBounds.z - minBounds.z);
-
-    for (size_t i = 0; i < vertices.size(); i += 3)
-    {
-        float u, v;
-
-        // Choisir le plan de projection en fonction de la taille de la bounding box
-        if ((maxBounds.x - minBounds.x) >= (maxBounds.y - minBounds.y) &&
-            (maxBounds.x - minBounds.x) >= (maxBounds.z - minBounds.z)) {
-            // Projeter sur le plan YZ
-            u = (vertices[i + 1] - minBounds.y) * scaleY;  // Coordonnée y normalisée
-            v = (vertices[i + 2] - minBounds.z) * scaleZ;  // Coordonnée z normalisée
-        }
-        else if ((maxBounds.y - minBounds.y) >= (maxBounds.z - minBounds.z)) {
-            // Projeter sur le plan XZ
-            u = (vertices[i] - minBounds.x) * scaleX;      // Coordonnée x normalisée
-            v = (vertices[i + 2] - minBounds.z) * scaleZ;  // Coordonnée z normalisée
-        }
-        else {
-            // Projeter sur le plan XY
-            u = (vertices[i] - minBounds.x) * scaleX;      // Coordonnée x normalisée
-            v = (vertices[i + 1] - minBounds.y) * scaleY;  // Coordonnée y normalisée
-        }
-
-        // Ajouter les coordonnées UV générées
-        textureCoords.push_back(TextureCoord{u, v});
+        // Correction des UV pour éviter la couture visible
+        if (vertex.texX < 0.0f) vertex.texX += 1.0f;
+        else if (vertex.texX > 1.0f) vertex.texX -= 1.0f;
     }
 }

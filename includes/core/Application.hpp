@@ -32,9 +32,14 @@ private:
     Camera camera;
     Mesh *mesh;
     float deltaTime;
-    bool firstMouse = true;
     float lastX = 800 / 2.0f;
     float lastY = 600 / 2.0f;
+
+    bool firstMouse;
+    float mouseLastX;
+    float mouseLastY;
+    bool isMiddleMousePressed;
+    bool isPanning;
 
     bool isRotationMode;
     float textureMixFactor = 0.0f;
@@ -43,12 +48,18 @@ private:
 
     Vec3 lightPos = Vec3(1.2f, 1.0f, 2.0f);
     Vec3 lightColor = Vec3(1.0f, 1.0f, 1.0f);
-    Vec3 defaultAmbient = Vec3(0.1f, 0.1f, 0.1f);
+    Vec3 defaultAmbient = Vec3(0.5f, 0.5f, 0.5f);
     Vec3 defaultDiffuse = Vec3(0.7f, 0.7f, 0.7f);
     Vec3 defaultSpecular = Vec3(1.0f, 1.0f, 1.0f);
     float defaultShininess = 32.0f;
 
     static void framebufferSizeCallback(GLFWwindow* window, int width, int height);
+    static void mouseCallback(GLFWwindow* window, double xpos, double ypos);
+    static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+    static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+    void handleMouseMovement(double xpos, double ypos);
+    void handleMouseButton(int button, int action, int mods);
+    void handleMouseScroll(double yoffset);
     void processInput();
     void render();
 
