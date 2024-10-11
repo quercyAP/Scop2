@@ -269,7 +269,6 @@ void ObjLoader::processVertex(const Face &face, int index, vector<float> &flatVe
     // Ajouter les UV
     if (!face.textureIndices.empty())
     {
-        cout << "Face Texture Indice trouver" << endl;
         // Si les indices de texture sont présents dans la face, les utiliser
         int texIndex = face.textureIndices[index] - 1;
         const TextureCoord &tc = textureCoords[texIndex];
@@ -278,7 +277,6 @@ void ObjLoader::processVertex(const Face &face, int index, vector<float> &flatVe
     }
     else if (!textureCoords.empty())
     {
-        cout << "Texture Coords trouver" << endl;
         // Si les indices ne sont pas présents mais que les coordonnées de texture existent, les utiliser
         const TextureCoord &tc = textureCoords[vertexIndex];
         flatTextures.push_back(tc.u);
@@ -286,7 +284,6 @@ void ObjLoader::processVertex(const Face &face, int index, vector<float> &flatVe
     }
     else
     {
-        cout << "Texture Coords generer" << endl;
         // Générer des UV par défaut si aucune coordonnée de texture n'est présente
         flatTextures.push_back(v.texX);
         flatTextures.push_back(v.texY);

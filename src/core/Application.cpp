@@ -13,8 +13,8 @@
 #include "Application.hpp"
 
 Application::Application(const string &objPath, const string &texturePath) : mesh(nullptr), shader(nullptr), window(nullptr),
-                             deltaTime(0.0f), camera(Vec3(5.0f, 0.0f, 5.0f), Vec3(0.0f, 1.0f, 0.0f), 45.0f, 0.0f),
-                             isRotationMode(false) , firstMouse(true), mouseLastX(0.0f), mouseLastY(0.0f), isMiddleMousePressed(false), isPanning(false)
+                                                                             deltaTime(0.0f), camera(Vec3(5.0f, 0.0f, 5.0f), Vec3(0.0f, 1.0f, 0.0f), 45.0f, 0.0f),
+                                                                             isRotationMode(false), firstMouse(true), mouseLastX(0.0f), mouseLastY(0.0f), isMiddleMousePressed(false), isPanning(false)
 {
     initWindow();
     initOpenGL();
@@ -24,7 +24,7 @@ Application::Application(const string &objPath, const string &texturePath) : mes
         cerr << "Failed to load OBJ file" << endl;
         exit(-1);
     }
-    
+
     mesh = new Mesh(objLoader.createMesh(texturePath));
     mesh->transform.calculateCenter(objLoader.vertices, 100);
     shader = new ShaderProgram("shader/shader.vert", "shader/shader.frag");
@@ -160,29 +160,50 @@ void Application::processInput()
         faceMode = !faceMode;
         usleep(100000);
     }
+
+    // Render mode
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+    if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+        glPointSize(3.0f);
+    }
 }
 
-void Application::mouseCallback(GLFWwindow* window, double xpos, double ypos) {
-    Application* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+void Application::mouseCallback(GLFWwindow *window, double xpos, double ypos)
+{
+    Application *app = static_cast<Application *>(glfwGetWindowUserPointer(window));
     app->handleMouseMovement(xpos, ypos);
 }
 
-void Application::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-    Application* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+void Application::mouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
+{
+    Application *app = static_cast<Application *>(glfwGetWindowUserPointer(window));
     app->handleMouseButton(button, action, mods);
 }
 
-void Application::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
-    Application* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+void Application::scrollCallback(GLFWwindow *window, double xoffset, double yoffset)
+{
+    Application *app = static_cast<Application *>(glfwGetWindowUserPointer(window));
     app->handleMouseScroll(yoffset);
 }
 
-void Application::handleMouseMovement(double xpos, double ypos) {
-    if (!isMiddleMousePressed) {
-        return; 
+void Application::handleMouseMovement(double xpos, double ypos)
+{
+    if (!isMiddleMousePressed)
+    {
+        return;
     }
 
-    if (firstMouse) {
+    if (firstMouse)
+    {
         mouseLastX = xpos;
         lastY = ypos;
         firstMouse = false;
@@ -194,30 +215,38 @@ void Application::handleMouseMovement(double xpos, double ypos) {
     mouseLastX = xpos;
     lastY = ypos;
 
-    if (isPanning) {
+    if (isPanning)
+    {
         camera.processPanMovement(xoffset, yoffset);
-    } else {
+    }
+    else
+    {
         camera.processMouseMovement(xoffset, yoffset, true);
     }
 }
 
-void Application::handleMouseButton(int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
-        if (action == GLFW_PRESS) {
+void Application::handleMouseButton(int button, int action, int mods)
+{
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+    {
+        if (action == GLFW_PRESS)
+        {
             isMiddleMousePressed = true;
-            isPanning = mods & GLFW_MOD_SHIFT;  
+            isPanning = mods & GLFW_MOD_SHIFT;
             firstMouse = true;
-        } else if (action == GLFW_RELEASE) {
+        }
+        else if (action == GLFW_RELEASE)
+        {
             isMiddleMousePressed = false;
             isPanning = false;
         }
     }
 }
 
-void Application::handleMouseScroll(double yoffset) {
+void Application::handleMouseScroll(double yoffset)
+{
     camera.processMouseScroll(yoffset);
 }
-
 
 void Application::render()
 {
@@ -278,4 +307,3 @@ void Application::render()
 
     mesh->draw();
 }
-
