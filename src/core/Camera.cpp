@@ -98,5 +98,5 @@ void Camera::processPanMovement(float xoffset, float yoffset) {
     Vec3 panRight = right * xoffset;
     Vec3 panUp = up * yoffset;
 
-    position = position + panRight - panUp;
+    position = position - panRight - panUp;
 }

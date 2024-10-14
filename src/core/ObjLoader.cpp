@@ -129,26 +129,41 @@ void ObjLoader::parseFace(istringstream &iss)
 
         // Lire l'indice du sommet
         getline(vertexStream, part, '/');
-        if (!part.empty())
+        if (!part.empty()) 
+        {
             vertexIndex = stoi(part);
+            if (vertexIndex < 1 || vertexIndex > static_cast<int>(vertices.size())) {
+                throw out_of_range("ERROR: Vertex index out of range");
+            }
+        }
 
-        // Vérifier s'il y a des coordonnées de texture ou des indices normaux à lire
+        // Vérifier s'il y a des coordonnées de texture à lire
         if (!vertexStream.eof())
         {
             getline(vertexStream, part, '/');
-            if (!part.empty())
+            if (!part.empty()) 
+            {
                 textureIndex = stoi(part);
+                if (textureIndex < 1 || textureIndex > static_cast<int>(textureCoords.size())) {
+                    throw out_of_range("ERROR: Texture index out of range");
+                }
+            }
         }
 
         // Vérifier s'il y a des indices normaux à lire
         if (!vertexStream.eof())
         {
             getline(vertexStream, part);
-            if (!part.empty())
+            if (!part.empty()) 
+            {
                 normalIndex = stoi(part);
+                if (normalIndex < 1 || normalIndex > static_cast<int>(normals.size())) {
+                    throw out_of_range("ERROR: Normal index out of range");
+                }
+            }
         }
 
-        // Ajouter les indices à la face. Notez que -1 est utilisé pour indiquer l'absence d'un indice.
+        // Ajouter les indices à la face
         if (vertexIndex != -1)
             face.vertexIndices.push_back(vertexIndex);
         if (textureIndex != -1)
@@ -241,7 +256,7 @@ Mesh ObjLoader::createMesh(const string &texturePath)
             continue;
         }
     }
-
+    
     for (size_t i = 0; i < flatVertices.size() / 3; ++i)
     {
         indices.push_back(i);
@@ -254,37 +269,43 @@ void ObjLoader::processVertex(const Face &face, int index, vector<float> &flatVe
                               const vector<Vec3> &vertexNormals)
 {
     int vertexIndex = face.vertexIndices[index] - 1;
-    const Vertex &v = vertices[vertexIndex];
+    const Vertex &v = vertices.at(vertexIndex); 
 
-    // Ajouter les positions du sommet
     flatVertices.push_back(v.x);
     flatVertices.push_back(v.y);
     flatVertices.push_back(v.z);
 
-    // Ajouter les normales
-    flatNormals.push_back(vertexNormals[vertexIndex].x);
-    flatNormals.push_back(vertexNormals[vertexIndex].y);
-    flatNormals.push_back(vertexNormals[vertexIndex].z);
+    // Vérification des normales
+    if (!vertexNormals.empty() && vertexIndex < static_cast<int>(vertexNormals.size()))
+    {
+        flatNormals.push_back(vertexNormals[vertexIndex].x);
+        flatNormals.push_back(vertexNormals[vertexIndex].y);
+        flatNormals.push_back(vertexNormals[vertexIndex].z);
+    }
+    else
+    {
+        throw runtime_error("ERROR: Normal index out of range during vertex processing.");
+    }
 
-    // Ajouter les UV
+    // Vérification des UVs
     if (!face.textureIndices.empty())
     {
-        // Si les indices de texture sont présents dans la face, les utiliser
         int texIndex = face.textureIndices[index] - 1;
+        if (texIndex < 0 || texIndex >= static_cast<int>(textureCoords.size())) {
+            throw out_of_range("ERROR: Texture index out of range");
+        }
         const TextureCoord &tc = textureCoords[texIndex];
         flatTextures.push_back(tc.u);
         flatTextures.push_back(tc.v);
     }
     else if (!textureCoords.empty())
     {
-        // Si les indices ne sont pas présents mais que les coordonnées de texture existent, les utiliser
         const TextureCoord &tc = textureCoords[vertexIndex];
         flatTextures.push_back(tc.u);
         flatTextures.push_back(tc.v);
     }
     else
     {
-        // Générer des UV par défaut si aucune coordonnée de texture n'est présente
         flatTextures.push_back(v.texX);
         flatTextures.push_back(v.texY);
     }
@@ -340,7 +361,7 @@ void ObjLoader::generateSphericalUVs()
     {
         // Normalisation du vecteur de position du sommet
         float length = sqrt(vertex.x * vertex.x + vertex.y * vertex.y + vertex.z * vertex.z);
-        if (length == 0) continue; // Éviter la division par zéro
+        if (length == 0) continue;
 
         float normX = vertex.x / length;
         float normY = vertex.y / length;
@@ -348,13 +369,13 @@ void ObjLoader::generateSphericalUVs()
 
         // Calcul de theta et phi
         float theta = atan2(normZ, normX);
-        float phi = acos(normY); // normY est déjà normalisé, pas besoin de diviser par le rayon
+        float phi = acos(normY);
 
         // Génération des coordonnées UV sphériques
-        vertex.texX = (theta + M_PI) / twoPi; // Mapping de theta à [0, 1]
-        vertex.texY = phi / M_PI;             // Mapping de phi à [0, 1]
+        vertex.texX = (theta + M_PI) / twoPi; 
+        vertex.texY = phi / M_PI;            
 
-        // Correction des UV pour éviter la couture visible
+        // Correction des UV
         if (vertex.texX < 0.0f) vertex.texX += 1.0f;
         else if (vertex.texX > 1.0f) vertex.texX -= 1.0f;
     }

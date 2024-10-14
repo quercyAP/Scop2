@@ -14,8 +14,8 @@
 
 Mat4::Mat4()
 {
-    std::memset(m, 0, sizeof(m));
-    m[0] = m[5] = m[10] = m[15] = 1.0f;
+    memset(m, 0, sizeof(m));
+    m[0] = m[5] = m[10] = m[15] = 1.0f; // matrice identité
 }
 
 Mat4 Mat4::operator*(const Mat4 &other) const
@@ -32,6 +32,7 @@ Mat4 Mat4::operator*(const Mat4 &other) const
                 m[i * 4 + 3] * other.m[j + 12];
         }
     }
+    
     return result;
 }
 
@@ -48,8 +49,8 @@ Mat4 Mat4::rotateY(float angle)
 {
     Mat4 result;
     float rad = angle * M_PI / 180.0f;
-    float cosA = std::cos(rad);
-    float sinA = std::sin(rad);
+    float cosA = cos(rad);
+    float sinA = sin(rad);
 
     result.m[0] = cosA;
     result.m[2] = -sinA;
@@ -62,8 +63,8 @@ Mat4 Mat4::rotateY(float angle)
 Mat4 Mat4::rotateX(float angle) {
     Mat4 result;
     float rad = angle * M_PI / 180.0f;
-    float cosA = std::cos(rad);
-    float sinA = std::sin(rad);
+    float cosA = cos(rad);
+    float sinA = sin(rad);
 
     result.m[5] = cosA;
     result.m[6] = sinA;
@@ -76,8 +77,8 @@ Mat4 Mat4::rotateX(float angle) {
 Mat4 Mat4::rotateZ(float angle) {
     Mat4 result;
     float rad = angle * M_PI / 180.0f;
-    float cosA = std::cos(rad);
-    float sinA = std::sin(rad);
+    float cosA = cos(rad);
+    float sinA = sin(rad);
 
     result.m[0] = cosA;
     result.m[1] = sinA;
@@ -99,7 +100,7 @@ Mat4 Mat4::scale(const Vec3 &vec)
 Mat4 Mat4::perspective(float fov, float aspect, float near, float far)
 {
     Mat4 result;
-    float tanHalfFOV = std::tan(fov / 2.0f);
+    float tanHalfFOV = tan(fov / 2.0f);
     float zRange = near - far;
 
     result.m[0] = 1.0f / (aspect * tanHalfFOV);

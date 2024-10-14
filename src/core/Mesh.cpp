@@ -12,14 +12,14 @@
 
 #include "Mesh.hpp"
 
-Mesh::Mesh(const std::vector<float> &vertices,
-           const std::vector<float> &normals,
-           const std::vector<float> &textureCoords,
-           const std::vector<unsigned int> &indices,
+Mesh::Mesh(const vector<float> &vertices,
+           const vector<float> &normals,
+           const vector<float> &textureCoords,
+           const vector<unsigned int> &indices,
            const Material *material,
-           const std::string &texturePath) 
+           const string &texturePath) 
 {
-    std::vector<float> combinedData;
+    vector<float> combinedData;
     bool hasNormals = !normals.empty();
     bool hasTextureCoords = !textureCoords.empty();
     this->material = material;
@@ -47,7 +47,7 @@ Mesh::Mesh(const std::vector<float> &vertices,
     setupMesh(combinedData, indices, hasNormals, hasTextureCoords);
 }
 
-void Mesh::setupMesh(const std::vector<float> &combinedData, const std::vector<unsigned int> &indices,
+void Mesh::setupMesh(const vector<float> &combinedData, const vector<unsigned int> &indices,
                      bool hasNormals, bool hasTextureCoords)
 {
     glGenVertexArrays(1, &VAO);

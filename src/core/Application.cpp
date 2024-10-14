@@ -25,9 +25,14 @@ Application::Application(const string &objPath, const string &texturePath) : mes
         exit(-1);
     }
 
-    mesh = new Mesh(objLoader.createMesh(texturePath));
-    mesh->transform.calculateCenter(objLoader.vertices, 100);
-    shader = new ShaderProgram("shader/shader.vert", "shader/shader.frag");
+    try {
+        mesh = new Mesh(objLoader.createMesh(texturePath));
+        mesh->transform.calculateCenter(objLoader.vertices, 100);
+        shader = new ShaderProgram("shader/shader.vert", "shader/shader.frag");
+    } catch (const std::exception &e) {
+        cerr << e.what() << endl;
+        exit(-1);
+    }
 }
 
 Application::~Application()
@@ -91,6 +96,24 @@ void Application::initOpenGL()
 void Application::framebufferSizeCallback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
+}
+
+void Application::mouseCallback(GLFWwindow *window, double xpos, double ypos)
+{
+    Application *app = static_cast<Application *>(glfwGetWindowUserPointer(window));
+    app->handleMouseMovement(xpos, ypos);
+}
+
+void Application::mouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
+{
+    Application *app = static_cast<Application *>(glfwGetWindowUserPointer(window));
+    app->handleMouseButton(button, action, mods);
+}
+
+void Application::scrollCallback(GLFWwindow *window, double xoffset, double yoffset)
+{
+    Application *app = static_cast<Application *>(glfwGetWindowUserPointer(window));
+    app->handleMouseScroll(yoffset);
 }
 
 void Application::processInput()
@@ -175,24 +198,6 @@ void Application::processInput()
         glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
         glPointSize(3.0f);
     }
-}
-
-void Application::mouseCallback(GLFWwindow *window, double xpos, double ypos)
-{
-    Application *app = static_cast<Application *>(glfwGetWindowUserPointer(window));
-    app->handleMouseMovement(xpos, ypos);
-}
-
-void Application::mouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
-{
-    Application *app = static_cast<Application *>(glfwGetWindowUserPointer(window));
-    app->handleMouseButton(button, action, mods);
-}
-
-void Application::scrollCallback(GLFWwindow *window, double xoffset, double yoffset)
-{
-    Application *app = static_cast<Application *>(glfwGetWindowUserPointer(window));
-    app->handleMouseScroll(yoffset);
 }
 
 void Application::handleMouseMovement(double xpos, double ypos)
