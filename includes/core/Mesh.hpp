@@ -38,7 +38,6 @@ private:
     int vertexCount;
 
     void setupMesh(const std::vector<float> &combinedData, const std::vector<unsigned int> &indices, bool hasNormals, bool hasTextureCoords);
-
 };
 
 #endif 

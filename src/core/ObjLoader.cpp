@@ -217,8 +217,13 @@ Mesh ObjLoader::createMesh(const string &texturePath)
     vector<float> flatNormals;
     vector<float> flatTextures;
     vector<unsigned int> indices;
+    Vec3 center;
 
-    Vec3 center = calculateCenterSampled(100);
+    cout << "Loading mesh with " << vertices.size() << " vertices and " << faces.size() << " faces." << endl;
+    if (vertices.size() > 1000)
+        center = calculateCenterSampled(100);
+    else
+        center = calculateCenter();
     adjustVerticesToCenter(center);
 
     vector<Vec3> vertexNormals;
